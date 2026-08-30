@@ -77,8 +77,10 @@ struct ContentView: View {
             }
             .navigationTitle("TSBot")
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button { showSettings = true } label: { Image(systemName: "gearshape") }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { showSettings = true }) {
+                        Image(systemName: "gearshape")
+                    }
                 }
             }
             .refreshable { await refresh() }
