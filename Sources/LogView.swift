@@ -1,8 +1,7 @@
 import SwiftUI
 
 struct LogView: View {
-    let idx: Int
-    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var vm: BotViewModel
     @State private var text = "Đang tải..."
 
     private let timer = Timer.publish(every: 3, on: .main, in: .common).autoconnect()
@@ -16,19 +15,15 @@ struct LogView: View {
                     .padding()
             }
             .navigationTitle("Log")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Đóng") { dismiss() }
-                }
-            }
             .task { await load() }
             .onReceive(timer) { _ in Task { await load() } }
         }
+        .settingsToolbar()
     }
 
     private func load() async {
         do {
-            text = try await APIClient.fetchLog(idx: idx)
+            text = try await APIClient.fetchLog(idx: vm.idx)
         } catch {
             text = "Lỗi: \(error.localizedDescription)"
         }
