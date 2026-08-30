@@ -8,14 +8,18 @@ struct LogView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                Text(text)
-                    .font(.system(size: 12, design: .monospaced))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
+            VStack(spacing: 0) {
+                AccountPickerBar()
+                ScrollView {
+                    Text(text)
+                        .font(.system(size: 12, design: .monospaced))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
+                }
             }
             .task { await load() }
             .onReceive(timer) { _ in Task { await load() } }
+            .onChange(of: vm.selectedIdx) { _ in Task { await load() } }
         }
         .settingsToolbar()
     }
