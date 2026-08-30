@@ -95,7 +95,7 @@ struct ContentView: View {
     private var aiTimSection: some View {
         Section("AI Tìm (tự đi lại)") {
             Toggle("Bật AI Tìm", isOn: $aiTimOn)
-                .onChange(of: aiTimOn) { _, newValue in
+                .onChange(of: aiTimOn) { newValue in
                     runAction { try await APIClient.setSetting(idx: idx, name: "AiTimActive", value: newValue ? "true" : "false") }
                 }
             Picker("Chế độ", selection: $moveMode) {
@@ -103,7 +103,7 @@ struct ContentView: View {
                 Text("Truy kích").tag(1)
             }
             .pickerStyle(.segmented)
-            .onChange(of: moveMode) { _, newValue in
+            .onChange(of: moveMode) { newValue in
                 runAction { try await APIClient.setSetting(idx: idx, name: "MoveMode", value: "\(newValue)") }
             }
         }
@@ -112,7 +112,7 @@ struct ContentView: View {
     private var discordSection: some View {
         Section("Discord") {
             Toggle("Forward chat World (loa)", isOn: $forwardLoa)
-                .onChange(of: forwardLoa) { _, newValue in
+                .onChange(of: forwardLoa) { newValue in
                     runAction { try await APIClient.setForwardLoa(idx: idx, value: newValue) }
                 }
         }
