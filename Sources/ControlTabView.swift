@@ -51,9 +51,15 @@ struct ControlTabView: View {
                         }
                     }
 
-                    Section("Dị Giới") {
+                    Section {
                         Button("Vào Dị Giới") { vm.runAction { try await APIClient.enterOtherworld(idx: vm.idx) } }
                             .disabled(vm.busy || vm.current?.loggedIn != true)
+                    } header: {
+                        Text("Dị Giới")
+                    } footer: {
+                        if vm.current?.loggedIn != true {
+                            Text("Chưa đăng nhập — đăng nhập ở mục trên trước.")
+                        }
                     }
 
                     Section("AI Tìm (tự đi lại)") {
