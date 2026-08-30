@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @Environment(\.dismiss) private var dismiss
     @State private var baseURL = Prefs.baseURL
     @State private var apiKey = Prefs.apiKey
 
@@ -12,17 +11,13 @@ struct SettingsView: View {
                     TextField("Base URL", text: $baseURL)
                         .autocapitalization(.none)
                         .keyboardType(.URL)
+                        .onChange(of: baseURL) { newValue in
+                            Prefs.baseURL = newValue.trimmingCharacters(in: .whitespaces)
+                        }
                     SecureField("API Key", text: $apiKey)
-                }
-            }
-            .navigationTitle("Cài đặt")
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Xong") {
-                        Prefs.baseURL = baseURL.trimmingCharacters(in: .whitespaces)
-                        Prefs.apiKey = apiKey.trimmingCharacters(in: .whitespaces)
-                        dismiss()
-                    }
+                        .onChange(of: apiKey) { newValue in
+                            Prefs.apiKey = newValue.trimmingCharacters(in: .whitespaces)
+                        }
                 }
             }
         }

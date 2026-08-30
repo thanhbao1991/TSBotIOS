@@ -5,23 +5,32 @@ struct LogView: View {
     @State private var text = "Đang tải..."
 
     private let timer = Timer.publish(every: 3, on: .main, in: .common).autoconnect()
+    private let bottomAnchorId = "bottom"
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 AccountPickerBar()
-                ScrollView {
-                    Text(text)
-                        .font(.system(size: 12, design: .monospaced))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding()
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        Text(text)
+                            .font(.system(size: 12, design: .monospaced))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding()
+                        Color.clear.frame(height: 1).id(bottomAnchorId)
+                    }
+                    .onChange(of: text) { _ in
+                        proxy.scrollTo(bottomAnchorId, anchor: .bottom)
+                    }
+                    .task {
+                        await load()
+                        proxy.scrollTo(bottomAnchorId, anchor: .bottom)
+                    }
                 }
             }
-            .task { await load() }
             .onReceive(timer) { _ in Task { await load() } }
             .onChange(of: vm.selectedIdx) { _ in Task { await load() } }
         }
-        .settingsToolbar()
     }
 
     private func load() async {

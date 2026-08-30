@@ -8,10 +8,10 @@ struct ContentView: View {
         TabView {
             StatusTabView()
                 .tabItem { Label("Trạng thái", systemImage: "person.crop.circle") }
-            AiTimTabView()
-                .tabItem { Label("AI Tìm", systemImage: "figure.walk") }
-            DiscordTabView()
-                .tabItem { Label("Discord", systemImage: "bubble.left.and.bubble.right") }
+            ControlTabView()
+                .tabItem { Label("Điều khiển", systemImage: "gamecontroller") }
+            SettingsView()
+                .tabItem { Label("Cài đặt", systemImage: "gearshape") }
             LogView()
                 .tabItem { Label("Log", systemImage: "doc.text") }
         }

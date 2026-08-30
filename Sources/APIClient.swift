@@ -71,6 +71,11 @@ enum APIClient {
     }
 
     @discardableResult
+    static func enterOtherworld(idx: Int) async throws -> Data {
+        try await request("/otherworld", method: "POST", query: ["idx": "\(idx)"])
+    }
+
+    @discardableResult
     static func setSetting(idx: Int, name: String, value: String) async throws -> Data {
         try await request("/setting", method: "POST", query: ["idx": "\(idx)", "name": name, "value": value])
     }
