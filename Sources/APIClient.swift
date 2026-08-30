@@ -75,6 +75,13 @@ enum APIClient {
         try await request("/otherworld", method: "POST", query: ["idx": "\(idx)"])
     }
 
+    /// Rời Dị Giới = đi bộ qua gate về map 12003 (Quảng Trường) — không có gói "rời" riêng, dùng
+    /// chung cơ chế walk-travel (đi bộ + tự bấm cửa) của server.
+    @discardableResult
+    static func leaveOtherworld(idx: Int) async throws -> Data {
+        try await request("/walk", method: "POST", query: ["idx": "\(idx)", "mapid": "12003"])
+    }
+
     @discardableResult
     static func setSetting(idx: Int, name: String, value: String) async throws -> Data {
         try await request("/setting", method: "POST", query: ["idx": "\(idx)", "name": name, "value": value])

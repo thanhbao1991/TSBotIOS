@@ -52,13 +52,18 @@ struct ControlTabView: View {
                     }
 
                     Section {
-                        Button("Vào Dị Giới") { vm.runAction { try await APIClient.enterOtherworld(idx: vm.idx) } }
-                            .disabled(vm.busy || vm.current?.loggedIn != true)
+                        HStack {
+                            Button("Vào map") { vm.runAction { try await APIClient.enterOtherworld(idx: vm.idx) } }
+                                .disabled(vm.busy || vm.current?.loggedIn != true || vm.current?.mapId == 49942)
+                            Spacer()
+                            Button("Ra map", role: .destructive) { vm.runAction { try await APIClient.leaveOtherworld(idx: vm.idx) } }
+                                .disabled(vm.busy || vm.current?.loggedIn != true || vm.current?.mapId != 49942)
+                        }
                     } header: {
                         Text("Dị Giới")
                     } footer: {
                         // Map Dị Giới cố định = 49942 (xem GameBot.EnterOtherworld) — so mapId hiện
-                        // tại để biết ngay đã vào chưa mà không cần qua tab Trạng thái/Log.
+                        // tại để biết ngay đã vào/ra chưa mà không cần qua tab Trạng thái/Log.
                         if let s = vm.current, s.loggedIn {
                             Text(s.mapId == 49942 ? "✅ Đang ở Dị Giới" : "Chưa ở Dị Giới (map hiện tại: \(s.mapId))")
                         } else {
