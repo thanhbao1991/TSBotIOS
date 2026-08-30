@@ -80,7 +80,7 @@ struct ControlTabView: View {
                             } else if vm.enteringOtherworldByIdx.contains(s.idx) {
                                 Text("⏳ Đang vào Dị Giới...")
                             } else {
-                                Text(s.mapId == BotViewModel.otherworldMapId ? "✅ Đang ở Dị Giới" : "Chưa ở Dị Giới (map hiện tại: \(s.mapId))")
+                                Text(s.mapId == BotViewModel.otherworldMapId ? "✅ Đang ở Dị Giới" : "Chưa ở Dị Giới")
                             }
                         } else {
                             Text("Chưa đăng nhập")
