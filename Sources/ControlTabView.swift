@@ -57,8 +57,12 @@ struct ControlTabView: View {
                     } header: {
                         Text("Dị Giới")
                     } footer: {
-                        if vm.current?.loggedIn != true {
-                            Text("Chưa đăng nhập — đăng nhập ở mục trên trước.")
+                        // Map Dị Giới cố định = 49942 (xem GameBot.EnterOtherworld) — so mapId hiện
+                        // tại để biết ngay đã vào chưa mà không cần qua tab Trạng thái/Log.
+                        if let s = vm.current, s.loggedIn {
+                            Text(s.mapId == 49942 ? "✅ Đang ở Dị Giới" : "Chưa ở Dị Giới (map hiện tại: \(s.mapId))")
+                        } else {
+                            Text("Chưa đăng nhập")
                         }
                     }
 
