@@ -17,78 +17,104 @@ struct ContentView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                if let err = errorMessage {
-                    Section {
-                        Text(err).foregroundStyle(.red).font(.footnote)
-                    }
-                }
+            mainList
+                .navigationTitle("TSBot")
+                .toolbar { settingsToolbar }
+                .refreshable { await refresh() }
+                .onReceive(timer) { _ in Task { await refresh() } }
+                .task { await refresh() }
+                .sheet(isPresented: $showSettings) { SettingsView() }
+                .sheet(isPresented: $showLog) { LogView(idx: idx) }
+                .overlay { busyOverlay }
+        }
+    }
 
-                Section("Trạng thái") {
-                    if let s = current {
-                        LabeledContent("Tài khoản", value: s.username)
-                        LabeledContent("Online", value: s.loggedIn ? "✅ \(s.charName)" : "❌ offline")
-                        if s.loggedIn {
-                            LabeledContent("Map", value: "\(s.mapId) (\(s.x), \(s.y))")
-                            LabeledContent("Level", value: "\(s.level)")
-                            LabeledContent("HP", value: "\(s.hp)/\(s.hpMax)")
-                            LabeledContent("SP", value: "\(s.sp)/\(s.spMax)")
-                        }
-                    } else {
-                        Text("Chưa có dữ liệu — kéo để làm mới").foregroundStyle(.secondary)
-                    }
-                }
+    @ViewBuilder
+    private var busyOverlay: some View {
+        if busy { ProgressView().controlSize(.large) }
+    }
 
-                Section("Điều khiển") {
-                    HStack {
-                        Button("Đăng nhập") { runAction { try await APIClient.login(idx: idx) } }
-                            .disabled(busy || current?.loggedIn == true)
-                        Spacer()
-                        Button("Đăng xuất", role: .destructive) { runAction { try await APIClient.logout(idx: idx) } }
-                            .disabled(busy || current?.loggedIn != true)
-                    }
-                }
+    @ToolbarContentBuilder
+    private var settingsToolbar: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button(action: { showSettings = true }) {
+                Image(systemName: "gearshape")
+            }
+        }
+    }
 
-                Section("AI Tìm (tự đi lại)") {
-                    Toggle("Bật AI Tìm", isOn: $aiTimOn)
-                        .onChange(of: aiTimOn) { _, newValue in
-                            runAction { try await APIClient.setSetting(idx: idx, name: "AiTimActive", value: newValue ? "true" : "false") }
-                        }
-                    Picker("Chế độ", selection: $moveMode) {
-                        Text("Ngẫu nhiên").tag(0)
-                        Text("Truy kích").tag(1)
-                    }
-                    .pickerStyle(.segmented)
-                    .onChange(of: moveMode) { _, newValue in
-                        runAction { try await APIClient.setSetting(idx: idx, name: "MoveMode", value: "\(newValue)") }
-                    }
-                }
-
-                Section("Discord") {
-                    Toggle("Forward chat World (loa)", isOn: $forwardLoa)
-                        .onChange(of: forwardLoa) { _, newValue in
-                            runAction { try await APIClient.setForwardLoa(idx: idx, value: newValue) }
-                        }
-                }
-
+    private var mainList: some View {
+        List {
+            if let err = errorMessage {
                 Section {
-                    Button("Xem log") { showLog = true }
+                    Text(err).foregroundStyle(.red).font(.footnote)
                 }
             }
-            .navigationTitle("TSBot")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { showSettings = true }) {
-                        Image(systemName: "gearshape")
-                    }
-                }
+
+            statusSection
+            controlSection
+            aiTimSection
+            discordSection
+
+            Section {
+                Button("Xem log") { showLog = true }
             }
-            .refreshable { await refresh() }
-            .onReceive(timer) { _ in Task { await refresh() } }
-            .task { await refresh() }
-            .sheet(isPresented: $showSettings) { SettingsView() }
-            .sheet(isPresented: $showLog) { LogView(idx: idx) }
-            .overlay { if busy { ProgressView().controlSize(.large) } }
+        }
+    }
+
+    @ViewBuilder
+    private var statusSection: some View {
+        Section("Trạng thái") {
+            if let s = current {
+                LabeledContent("Tài khoản", value: s.username)
+                LabeledContent("Online", value: s.loggedIn ? "✅ \(s.charName)" : "❌ offline")
+                if s.loggedIn {
+                    LabeledContent("Map", value: "\(s.mapId) (\(s.x), \(s.y))")
+                    LabeledContent("Level", value: "\(s.level)")
+                    LabeledContent("HP", value: "\(s.hp)/\(s.hpMax)")
+                    LabeledContent("SP", value: "\(s.sp)/\(s.spMax)")
+                }
+            } else {
+                Text("Chưa có dữ liệu — kéo để làm mới").foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private var controlSection: some View {
+        Section("Điều khiển") {
+            HStack {
+                Button("Đăng nhập") { runAction { try await APIClient.login(idx: idx) } }
+                    .disabled(busy || current?.loggedIn == true)
+                Spacer()
+                Button("Đăng xuất", role: .destructive) { runAction { try await APIClient.logout(idx: idx) } }
+                    .disabled(busy || current?.loggedIn != true)
+            }
+        }
+    }
+
+    private var aiTimSection: some View {
+        Section("AI Tìm (tự đi lại)") {
+            Toggle("Bật AI Tìm", isOn: $aiTimOn)
+                .onChange(of: aiTimOn) { _, newValue in
+                    runAction { try await APIClient.setSetting(idx: idx, name: "AiTimActive", value: newValue ? "true" : "false") }
+                }
+            Picker("Chế độ", selection: $moveMode) {
+                Text("Ngẫu nhiên").tag(0)
+                Text("Truy kích").tag(1)
+            }
+            .pickerStyle(.segmented)
+            .onChange(of: moveMode) { _, newValue in
+                runAction { try await APIClient.setSetting(idx: idx, name: "MoveMode", value: "\(newValue)") }
+            }
+        }
+    }
+
+    private var discordSection: some View {
+        Section("Discord") {
+            Toggle("Forward chat World (loa)", isOn: $forwardLoa)
+                .onChange(of: forwardLoa) { _, newValue in
+                    runAction { try await APIClient.setForwardLoa(idx: idx, value: newValue) }
+                }
         }
     }
 
