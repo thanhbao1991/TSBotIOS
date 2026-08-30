@@ -37,7 +37,6 @@ struct StatusTabView: View {
                     }
                 }
             }
-            .navigationTitle("Trạng thái")
             .refreshable { await vm.refresh() }
             .overlay { if vm.busy { ProgressView().controlSize(.large) } }
         }

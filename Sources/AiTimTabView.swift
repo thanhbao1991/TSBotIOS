@@ -21,7 +21,6 @@ struct AiTimTabView: View {
                     }
                 }
             }
-            .navigationTitle("AI Tìm")
             .overlay { if vm.busy { ProgressView().controlSize(.large) } }
         }
         .settingsToolbar()

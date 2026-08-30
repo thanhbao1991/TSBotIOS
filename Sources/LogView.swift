@@ -14,7 +14,6 @@ struct LogView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
             }
-            .navigationTitle("Log")
             .task { await load() }
             .onReceive(timer) { _ in Task { await load() } }
         }

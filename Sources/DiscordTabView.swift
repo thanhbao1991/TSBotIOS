@@ -13,7 +13,6 @@ struct DiscordTabView: View {
                         }
                 }
             }
-            .navigationTitle("Discord")
             .overlay { if vm.busy { ProgressView().controlSize(.large) } }
         }
         .settingsToolbar()
