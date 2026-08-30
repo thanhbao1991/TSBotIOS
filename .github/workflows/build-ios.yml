@@ -1,0 +1,54 @@
+name: Build unsigned iOS IPA
+
+# Build chạy trên macOS runner của GitHub — output là .ipa CHƯA KÝ. Ký + cài thật làm ở máy
+# Windows bằng Sideloadly (Apple ID cá nhân), không ký trong CI.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Stamp build version into Info.plist
+        run: |
+          SHORT_SHA=$(git rev-parse --short=8 HEAD)
+          BUILD_TIME=$(date -u +%Y%m%d%H%M%S)
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${SHORT_SHA}" Sources/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${BUILD_TIME}" Sources/Info.plist
+
+      - name: Build unsigned .app
+        run: |
+          xcodebuild \
+            -project TSBotIOS.xcodeproj \
+            -scheme TSBotIOS \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM="" \
+            build
+
+      - name: Package unsigned .ipa
+        run: |
+          set -e
+          APP_PATH="build/Build/Products/Release-iphoneos/TSBotIOS.app"
+          mkdir -p Payload
+          cp -r "$APP_PATH" Payload/
+          zip -r TSBotIOS-unsigned.ipa Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TSBotIOS-unsigned-ipa
+          path: TSBotIOS-unsigned.ipa
