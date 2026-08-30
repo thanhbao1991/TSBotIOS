@@ -53,19 +53,35 @@ struct ControlTabView: View {
 
                     Section {
                         HStack {
-                            Button("Vào map") { vm.runAction { try await APIClient.enterOtherworld(idx: vm.idx) } }
-                                .disabled(vm.busy || vm.current?.loggedIn != true || vm.current?.mapId == 49942)
+                            Button("Vào map") {
+                                let idx = vm.idx
+                                vm.enteringOtherworldByIdx.insert(idx)
+                                vm.runAction { try await APIClient.enterOtherworld(idx: idx) }
+                            }
+                            .disabled(vm.busy || vm.current?.loggedIn != true || vm.current?.mapId == BotViewModel.otherworldMapId)
                             Spacer()
-                            Button("Ra map", role: .destructive) { vm.runAction { try await APIClient.leaveOtherworld(idx: vm.idx) } }
-                                .disabled(vm.busy || vm.current?.loggedIn != true || vm.current?.mapId != 49942)
+                            Button("Ra map", role: .destructive) {
+                                let idx = vm.idx
+                                vm.leavingOtherworldByIdx.insert(idx)
+                                vm.runAction { try await APIClient.leaveOtherworld(idx: idx) }
+                            }
+                            .disabled(vm.busy || vm.current?.loggedIn != true || vm.current?.mapId != BotViewModel.otherworldMapId)
                         }
                     } header: {
                         Text("Dị Giới")
                     } footer: {
                         // Map Dị Giới cố định = 49942 (xem GameBot.EnterOtherworld) — so mapId hiện
-                        // tại để biết ngay đã vào/ra chưa mà không cần qua tab Trạng thái/Log.
+                        // tại để biết ngay đã vào/ra chưa mà không cần qua tab Trạng thái/Log. Cờ
+                        // leaving/enteringOtherworldByIdx cho biết đang trong lúc di chuyển (đã bấm
+                        // nút, chưa thấy map đổi) để phân biệt với 2 trạng thái tĩnh Đang/Chưa ở.
                         if let s = vm.current, s.loggedIn {
-                            Text(s.mapId == 49942 ? "✅ Đang ở Dị Giới" : "Chưa ở Dị Giới (map hiện tại: \(s.mapId))")
+                            if vm.leavingOtherworldByIdx.contains(s.idx) {
+                                Text("⏳ Đang ra Dị Giới...")
+                            } else if vm.enteringOtherworldByIdx.contains(s.idx) {
+                                Text("⏳ Đang vào Dị Giới...")
+                            } else {
+                                Text(s.mapId == BotViewModel.otherworldMapId ? "✅ Đang ở Dị Giới" : "Chưa ở Dị Giới (map hiện tại: \(s.mapId))")
+                            }
                         } else {
                             Text("Chưa đăng nhập")
                         }

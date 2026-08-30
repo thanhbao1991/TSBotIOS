@@ -6,6 +6,10 @@ import Foundation
 /// Prefs.idx để mở app lần sau vẫn nhớ account vừa chọn.
 @MainActor
 final class BotViewModel: ObservableObject {
+    /// Map Dị Giới cố định (xem GameBot.EnterOtherworld phía backend) — dùng để suy ra đã
+    /// vào/ra chưa từ mapId trong /status, không cần thêm field riêng ở server.
+    static let otherworldMapId = 49942
+
     @Published var statuses: [BotStatus] = []
     @Published var errorMessage: String?
     @Published var busy = false
@@ -14,6 +18,11 @@ final class BotViewModel: ObservableObject {
     @Published var aiTimOnByIdx: [Int: Bool] = [:]
     @Published var moveModeByIdx: [Int: Int] = [:]
     @Published var forwardLoaByIdx: [Int: Bool] = [:]
+    /// Đang chờ vào/ra Dị Giới (bấm nút xong, chưa thấy mapId đổi) — hiện "Đang ra/vào Dị Giới..."
+    /// ở tab Điều khiển cho dễ theo dõi thay vì chỉ 2 trạng thái tĩnh Có/Chưa. Tự xoá khi refresh()
+    /// thấy mapId đã đổi đúng hướng.
+    @Published var leavingOtherworldByIdx: Set<Int> = []
+    @Published var enteringOtherworldByIdx: Set<Int> = []
     @Published var selectedIdx: Int = Prefs.idx {
         didSet { Prefs.idx = selectedIdx }
     }
@@ -25,6 +34,10 @@ final class BotViewModel: ObservableObject {
         do {
             statuses = try await APIClient.fetchStatus()
             errorMessage = nil
+            for s in statuses {
+                if s.mapId != Self.otherworldMapId { leavingOtherworldByIdx.remove(s.idx) }
+                if s.mapId == Self.otherworldMapId { enteringOtherworldByIdx.remove(s.idx) }
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
