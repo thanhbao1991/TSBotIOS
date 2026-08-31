@@ -91,7 +91,17 @@ struct SettingsView: View {
                 } header: {
                     Text("Skill nhân vật")
                 } footer: {
-                    Text("Skill đánh: dùng khi đánh 1 mục tiêu thường.\nSkill AOE: tự đổi sang skill này khi số quái quanh đủ ngưỡng (đặt ở mục Chiến đấu bên dưới).\nSkill hệ: tự dùng thay Skill đánh khi gặp quái ĐÚNG hệ tương ứng (khắc chế hệ, sát thương cao hơn).")
+                    // Đúng thứ tự ưu tiên thật trong AutomationEngine.TryAutoAttack: bắt đầu từ
+                    // Skill đánh → nếu đủ ngưỡng AOE thì ĐÈ thành Skill AOE → cuối cùng nếu quái
+                    // đúng hệ có cấu hình Skill hệ thì ĐÈ LÊN CẢ 2 (luôn thắng, bất kể AOE hay
+                    // không) — mỗi lượt đánh chỉ dùng ĐÚNG 1 skill duy nhất theo thứ tự này.
+                    Text("""
+                    Mỗi lượt đánh chỉ dùng 1 skill, chọn theo thứ tự ưu tiên sau (dưới đè lên trên):
+                    1. Skill đánh — mặc định, dùng khi đánh 1 quái thường.
+                    2. Skill AOE — tự thay Skill đánh khi số quái quanh > ngưỡng (đặt ở mục Chiến đấu bên dưới).
+                    3. Skill hệ — nếu quái đang đánh ĐÚNG hệ có cấu hình, LUÔN thắng cả Skill đánh lẫn Skill AOE (kể cả khi đang đủ ngưỡng AOE).
+                    Bỏ trống (—) = không set skill đó, bot bỏ qua bước tương ứng.
+                    """)
                 }
 
                 Section {
@@ -110,7 +120,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Chiến đấu")
                 } footer: {
-                    Text("Né trận nếu quái mạnh hơn X level. Chỉ đánh AOE khi có từ Y quái trở lên.")
+                    Text("Kiểm tra TRƯỚC TIÊN, trước cả việc chọn skill nào ở trên: nếu quái đang đánh mạnh hơn nhân vật quá X level thì bot Chạy Trốn ngay, không đánh nữa (bỏ qua Skill đánh/AOE/hệ). Ngưỡng AOE (Y) chỉ dùng để quyết định Skill đánh hay Skill AOE ở mục trên, không liên quan tới né.")
                 }
 
                 Section {
@@ -129,7 +139,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Skill pet")
                 } footer: {
-                    Text("Giống Skill đánh/Skill AOE của nhân vật nhưng dùng cho pet. Áp dụng cho pet ĐANG xuất chiến — đổi pet khác (triệu hồi pet khác) thì phải chọn lại vì pet mới có bộ skill riêng.")
+                    Text("Cùng logic ưu tiên như Skill nhân vật ở trên (đánh → AOE → hệ, hệ luôn thắng), tính riêng cho pet — pet có thể đang đánh skill hệ trong khi nhân vật đánh skill AOE cùng lúc. Áp dụng cho pet ĐANG xuất chiến — triệu hồi pet khác thì phải chọn lại vì pet mới có bộ skill riêng.")
                 }
             }
             .task(id: vm.selectedIdx) { await loadAll() }
