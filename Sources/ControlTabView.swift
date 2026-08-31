@@ -136,6 +136,7 @@ struct ControlTabView: View {
                         }
                         .pickerStyle(.segmented)
                         .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 2, trailing: 16))
 
                         if vm.current?.partyRole == "Member" {
                             if !otherAccounts.isEmpty {
@@ -145,9 +146,11 @@ struct ControlTabView: View {
                                     }
                                 }
                                 .listRowSeparator(.hidden)
+                                .listRowInsets(EdgeInsets(top: 2, leading: 16, bottom: 8, trailing: 16))
                             } else {
                                 Text("Chưa có account khác để theo").foregroundStyle(.secondary)
                                     .listRowSeparator(.hidden)
+                                    .listRowInsets(EdgeInsets(top: 2, leading: 16, bottom: 8, trailing: 16))
                             }
                             HStack {
                                 Text("Nhóm hiện tại")
@@ -166,6 +169,7 @@ struct ControlTabView: View {
                                 }
                                 .disabled(vm.busy || vm.current?.loggedIn != true)
                                 .listRowSeparator(.hidden)
+                                .listRowInsets(EdgeInsets(top: 2, leading: 16, bottom: 8, trailing: 16))
                             }
                             HStack {
                                 Text("Nhóm hiện tại")
