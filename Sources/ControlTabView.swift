@@ -67,6 +67,20 @@ struct ControlTabView: View {
         )
     }
 
+    /// Level Dị Giới: index 1-15 tra ra level thật 10,25,40...180 (xem GameBot.OtherworldLevels).
+    private static let otherworldLevels = [10, 25, 40, 55, 70, 85, 100, 110, 120, 130, 140, 150, 160, 170, 180]
+
+    private var otherworldLevelIndexBinding: Binding<Int> {
+        Binding(
+            get: { vm.otherworldLevelIndexByIdx[vm.selectedIdx] ?? 1 },
+            set: { newValue in
+                let idx = vm.selectedIdx
+                vm.otherworldLevelIndexByIdx[idx] = newValue
+                vm.runAction { try await APIClient.setOtherworldLevel(idx: idx, levelIndex: newValue) }
+            }
+        )
+    }
+
     private var forwardLoaBinding: Binding<Bool> {
         Binding(
             get: { vm.forwardLoaByIdx[vm.selectedIdx] ?? false },
@@ -108,6 +122,11 @@ struct ControlTabView: View {
                                 vm.runAction { try await APIClient.leaveOtherworld(idx: idx) }
                             }
                             .disabled(vm.busy || vm.current?.loggedIn != true || vm.current?.mapId != BotViewModel.otherworldMapId)
+                        }
+                        Picker("Level quái", selection: otherworldLevelIndexBinding) {
+                            ForEach(1...15, id: \.self) { i in
+                                Text("Lv \(Self.otherworldLevels[i - 1])").tag(i)
+                            }
                         }
                     } header: {
                         Text("Dị Giới")

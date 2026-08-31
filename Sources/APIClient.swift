@@ -113,6 +113,13 @@ enum APIClient {
         try await request("/walk", method: "POST", query: ["idx": "\(idx)", "mapid": "12003"])
     }
 
+    /// Chọn mốc level quái trong Dị Giới — levelIndex 1-15, tra GameBot.OtherworldLevels ra level
+    /// thật (10,25,40...180). Gửi lệnh THẬT xuống server, khác /setting (chỉ lưu tuỳ chọn).
+    @discardableResult
+    static func setOtherworldLevel(idx: Int, levelIndex: Int) async throws -> Data {
+        try await request("/action", method: "POST", query: ["idx": "\(idx)", "name": "otherworldlevel", "index": "\(levelIndex)"])
+    }
+
     @discardableResult
     static func setSetting(idx: Int, name: String, value: String) async throws -> Data {
         try await request("/setting", method: "POST", query: ["idx": "\(idx)", "name": name, "value": value])

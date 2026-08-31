@@ -51,6 +51,7 @@ final class BotViewModel: ObservableObject {
     /// Pet đang chọn trong Picker "Pet xuất chiến" theo TỪNG account — lưu ở đây (thay vì @State
     /// cục bộ trên StatusTabView) để không mất lựa chọn khi chuyển qua tab khác rồi quay lại.
     @Published var selectedPetIdByIdx: [Int: Int] = [:]
+    @Published var otherworldLevelIndexByIdx: [Int: Int] = [:]
     @Published var charSkillConfigByIdx: [Int: CharSkillConfig] = [:]
     @Published var petSkillConfigByIdx: [Int: PetSkillConfig] = [:]
     @Published var selectedIdx: Int = Prefs.idx {
