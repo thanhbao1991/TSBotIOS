@@ -75,9 +75,15 @@ struct SettingsView: View {
                         SkillPicker(title: "Skill AOE", skills: charSkills, selection: $aoeSkillId) { skillId in
                             vm.runAction { try await APIClient.setSetting(idx: vm.selectedIdx, name: "AoeSkillId", value: "\(skillId)") }
                         }
+                        TextField("Ngưỡng AOE: số quái tối thiểu", text: $aoeThresholdCountText)
+                            .keyboardType(.numberPad)
+                            .onChange(of: aoeThresholdCountText) { newValue in
+                                guard let v = Int(newValue) else { return }
+                                vm.runAction { try await APIClient.setSetting(idx: vm.selectedIdx, name: "AoeThresholdCount", value: "\(v)") }
+                            }
                         ForEach([1, 2, 3, 4], id: \.self) { element in
                             SkillPicker(
-                                title: "Skill hệ \(Self.elementNames[element] ?? "")",
+                                title: "Skill đánh quái hệ \(Self.elementNames[element] ?? "")",
                                 skills: charSkills,
                                 selection: Binding(
                                     get: { elementSkillId[element] ?? nil },
@@ -98,7 +104,7 @@ struct SettingsView: View {
                     Text("""
                     Mỗi lượt đánh chỉ dùng 1 skill, chọn theo thứ tự ưu tiên sau (dưới đè lên trên):
                     1. Skill đánh — mặc định, dùng khi đánh 1 quái thường.
-                    2. Skill AOE — tự thay Skill đánh khi số quái quanh > ngưỡng (đặt ở mục Chiến đấu bên dưới).
+                    2. Skill AOE — tự thay Skill đánh khi số quái quanh > Ngưỡng AOE (dòng bên dưới).
                     3. Skill hệ — nếu quái đang đánh ĐÚNG hệ có cấu hình, LUÔN thắng cả Skill đánh lẫn Skill AOE (kể cả khi đang đủ ngưỡng AOE).
                     Bỏ trống (—) = không set skill đó, bot bỏ qua bước tương ứng.
                     """)
@@ -111,16 +117,10 @@ struct SettingsView: View {
                             guard let v = Int(newValue) else { return }
                             vm.runAction { try await APIClient.setSetting(idx: vm.selectedIdx, name: "FleeLevelDiff", value: "\(v)") }
                         }
-                    TextField("Số quái tối thiểu để đánh AOE", text: $aoeThresholdCountText)
-                        .keyboardType(.numberPad)
-                        .onChange(of: aoeThresholdCountText) { newValue in
-                            guard let v = Int(newValue) else { return }
-                            vm.runAction { try await APIClient.setSetting(idx: vm.selectedIdx, name: "AoeThresholdCount", value: "\(v)") }
-                        }
                 } header: {
-                    Text("Chiến đấu")
+                    Text("Né trận")
                 } footer: {
-                    Text("Kiểm tra TRƯỚC TIÊN, trước cả việc chọn skill nào ở trên: nếu quái đang đánh mạnh hơn nhân vật quá X level thì bot Chạy Trốn ngay, không đánh nữa (bỏ qua Skill đánh/AOE/hệ). Ngưỡng AOE (Y) chỉ dùng để quyết định Skill đánh hay Skill AOE ở mục trên, không liên quan tới né.")
+                    Text("Kiểm tra TRƯỚC TIÊN, trước cả việc chọn skill nào ở mục Skill nhân vật: nếu quái đang đánh mạnh hơn nhân vật quá X level thì bot Chạy Trốn ngay, không đánh nữa (bỏ qua Skill đánh/AOE/hệ).")
                 }
 
                 Section {
