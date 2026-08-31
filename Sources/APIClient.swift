@@ -65,8 +65,8 @@ enum APIClient {
         return try JSONDecoder().decode([BotStatus].self, from: data)
     }
 
-    static func fetchSkills(idx: Int) async throws -> [SkillRow] {
-        let data = try await request("/skills", method: "GET", query: ["idx": "\(idx)"])
+    static func fetchSkills(idx: Int, target: String = "char") async throws -> [SkillRow] {
+        let data = try await request("/skills", method: "GET", query: ["idx": "\(idx)", "target": target])
         return try JSONDecoder().decode([SkillRow].self, from: data)
     }
 
@@ -120,5 +120,10 @@ enum APIClient {
     @discardableResult
     static func promoteMember(idx: Int, memberIdx: Int) async throws -> Data {
         try await request("/promotemember", method: "POST", query: ["idx": "\(idx)", "memberidx": "\(memberIdx)"])
+    }
+
+    @discardableResult
+    static func setElementSkill(idx: Int, element: Int, skillId: Int) async throws -> Data {
+        try await request("/setting", method: "POST", query: ["idx": "\(idx)", "name": "ElementSkillId", "element": "\(element)", "value": "\(skillId)"])
     }
 }
