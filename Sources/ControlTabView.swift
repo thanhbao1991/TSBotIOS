@@ -137,10 +137,14 @@ struct ControlTabView: View {
                                 .disabled(vm.busy || vm.current?.loggedIn != true || vm.current?.partied != true)
                             }
                         } else {
-                            Button("Giải tán nhóm", role: .destructive) {
-                                vm.runAction { try await APIClient.disbandParty(idx: vm.idx) }
+                            HStack {
+                                Text("Nhóm hiện tại")
+                                Spacer()
+                                Button("Giải tán nhóm", role: .destructive) {
+                                    vm.runAction { try await APIClient.disbandParty(idx: vm.idx) }
+                                }
+                                .disabled(vm.busy || vm.current?.loggedIn != true)
                             }
-                            .disabled(vm.busy || vm.current?.loggedIn != true)
                         }
                     } header: {
                         Text("Tổ đội")
