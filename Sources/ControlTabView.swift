@@ -134,7 +134,6 @@ struct ControlTabView: View {
                             Text("Leader").tag("Leader")
                             Text("Member").tag("Member")
                         }
-                        .pickerStyle(.segmented)
 
                         if vm.current?.partyRole == "Member" {
                             if !otherAccounts.isEmpty {
