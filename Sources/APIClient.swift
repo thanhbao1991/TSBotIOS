@@ -19,6 +19,14 @@ struct BotStatus: Decodable, Identifiable {
     let partyMemberCount: Int
 }
 
+struct SkillRow: Decodable, Identifiable {
+    var id: Int { Id }
+    let Name: String
+    let Lv: Int
+    let Max: Int
+    let Id: Int
+}
+
 struct APIError: LocalizedError {
     let message: String
     var errorDescription: String? { message }
@@ -55,6 +63,11 @@ enum APIClient {
     static func fetchStatus() async throws -> [BotStatus] {
         let data = try await request("/status", method: "GET")
         return try JSONDecoder().decode([BotStatus].self, from: data)
+    }
+
+    static func fetchSkills(idx: Int) async throws -> [SkillRow] {
+        let data = try await request("/skills", method: "GET", query: ["idx": "\(idx)"])
+        return try JSONDecoder().decode([SkillRow].self, from: data)
     }
 
     static func fetchLog(idx: Int, lines: Int = 150) async throws -> String {

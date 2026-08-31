@@ -4,7 +4,8 @@ struct SettingsView: View {
     @EnvironmentObject private var vm: BotViewModel
     @State private var baseURL = Prefs.baseURL
     @State private var apiKey = Prefs.apiKey
-    @State private var attackSkillId = ""
+    @State private var skills: [SkillRow] = []
+    @State private var selectedSkillId: Int?
     @State private var skillError: String?
 
     var body: some View {
@@ -24,29 +25,43 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    HStack {
-                        TextField("Skill ID (vd: 10000)", text: $attackSkillId)
-                            .keyboardType(.numberPad)
-                        Button("Áp dụng") {
-                            guard let skillId = Int(attackSkillId) else {
-                                skillError = "Skill ID phải là số"
-                                return
+                    AccountPickerBar()
+                        .listRowInsets(EdgeInsets())
+
+                    if let err = skillError {
+                        Text(err).foregroundStyle(.red).font(.footnote)
+                    } else if skills.isEmpty {
+                        Text("Chưa có dữ liệu skill — cần đăng nhập account này trước").foregroundStyle(.secondary)
+                    } else {
+                        Picker("Skill đánh", selection: $selectedSkillId) {
+                            ForEach(skills) { sk in
+                                Text("\(sk.Name) (Lv \(sk.Lv)/\(sk.Max))").tag(sk.Id as Int?)
                             }
-                            skillError = nil
+                        }
+                        .onChange(of: selectedSkillId) { newValue in
+                            guard let skillId = newValue else { return }
                             let idx = vm.selectedIdx
                             vm.runAction { try await APIClient.setSetting(idx: idx, name: "SelectedCharSkillId", value: "\(skillId)") }
                         }
-                        .disabled(attackSkillId.isEmpty)
-                    }
-                    if let err = skillError {
-                        Text(err).foregroundStyle(.red).font(.footnote)
                     }
                 } header: {
-                    Text("Skill đánh (account đang chọn)")
+                    Text("Skill đánh")
                 } footer: {
-                    Text("Skill dùng để tự động tấn công mục tiêu đơn — nhập đúng skillId trong game.")
+                    Text("Danh sách skill lấy trực tiếp từ nhân vật account đang chọn — chọn xong áp dụng ngay.")
                 }
             }
+            .task(id: vm.selectedIdx) { await loadSkills() }
+        }
+    }
+
+    private func loadSkills() async {
+        skillError = nil
+        do {
+            skills = try await APIClient.fetchSkills(idx: vm.selectedIdx)
+            selectedSkillId = nil
+        } catch {
+            skills = []
+            skillError = error.localizedDescription
         }
     }
 }
