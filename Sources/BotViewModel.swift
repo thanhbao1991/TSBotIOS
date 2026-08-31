@@ -1,5 +1,24 @@
 import Foundation
 
+/// Lựa chọn skill Char theo TỪNG account — lưu trên BotViewModel (không phải @State cục bộ trên
+/// SettingsView) vì server không có endpoint trả lại giá trị đang set, nên UI phải tự nhớ; để ở
+/// đây thay vì @State tránh mất lựa chọn khi rời tab Cài đặt rồi quay lại (SwiftUI có thể tái tạo
+/// view state cục bộ, @Published trên ObservableObject dùng chung thì không bị mất).
+struct CharSkillConfig {
+    var attackSkillId: Int?
+    var aoeSkillId: Int?
+    var aoeCount = 5
+    var thuySkillId: Int?
+    var fleeLevelDiffText = ""
+}
+
+struct PetSkillConfig {
+    var attackSkillId: Int?
+    var aoeSkillId: Int?
+    var aoeCount = 5
+    var fleeLevelDiffText = ""
+}
+
 /// State dùng chung cho các tab (Trạng thái/AI Tìm/Discord/Log) — 1 instance duy nhất tạo ở
 /// ContentView, truyền xuống qua @EnvironmentObject để mọi tab thấy cùng dữ liệu, tránh mỗi tab
 /// tự poll /status riêng. `selectedIdx` chọn account đang điều khiển (2+ account) — lưu lại qua
@@ -32,6 +51,8 @@ final class BotViewModel: ObservableObject {
     /// Pet đang chọn trong Picker "Pet xuất chiến" theo TỪNG account — lưu ở đây (thay vì @State
     /// cục bộ trên StatusTabView) để không mất lựa chọn khi chuyển qua tab khác rồi quay lại.
     @Published var selectedPetIdByIdx: [Int: Int] = [:]
+    @Published var charSkillConfigByIdx: [Int: CharSkillConfig] = [:]
+    @Published var petSkillConfigByIdx: [Int: PetSkillConfig] = [:]
     @Published var selectedIdx: Int = Prefs.idx {
         didSet { Prefs.idx = selectedIdx }
     }

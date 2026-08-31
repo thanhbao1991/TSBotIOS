@@ -53,8 +53,6 @@ private struct AoeRow: View {
 
 struct SettingsView: View {
     @EnvironmentObject private var vm: BotViewModel
-    @State private var baseURL = Prefs.baseURL
-    @State private var apiKey = Prefs.apiKey
 
     @State private var charSkills: [SkillRow] = []
     @State private var petSkills: [SkillRow] = []
@@ -64,33 +62,23 @@ struct SettingsView: View {
     /// Hệ Thủy cố định = 2 (xem GameBot: 1 Địa 2 Thủy 3 Hỏa 4 Phong) — user chỉ cần đúng hệ này.
     private static let thuyElement = 2
 
-    @State private var attackSkillId: Int?
-    @State private var aoeSkillId: Int?
-    @State private var aoeCount = 5
-    @State private var thuySkillId: Int?
-    @State private var fleeLevelDiffText = ""
+    private var charConfig: Binding<CharSkillConfig> {
+        Binding(
+            get: { vm.charSkillConfigByIdx[vm.selectedIdx] ?? CharSkillConfig() },
+            set: { vm.charSkillConfigByIdx[vm.selectedIdx] = $0 }
+        )
+    }
 
-    @State private var petSkillId: Int?
-    @State private var petAoeSkillId: Int?
-    @State private var petAoeCount = 5
-    @State private var petFleeLevelDiffText = ""
+    private var petConfig: Binding<PetSkillConfig> {
+        Binding(
+            get: { vm.petSkillConfigByIdx[vm.selectedIdx] ?? PetSkillConfig() },
+            set: { vm.petSkillConfigByIdx[vm.selectedIdx] = $0 }
+        )
+    }
 
     var body: some View {
         NavigationStack {
             Form {
-                Section("Kết nối") {
-                    TextField("Base URL", text: $baseURL)
-                        .autocapitalization(.none)
-                        .keyboardType(.URL)
-                        .onChange(of: baseURL) { newValue in
-                            Prefs.baseURL = newValue.trimmingCharacters(in: .whitespaces)
-                        }
-                    SecureField("API Key", text: $apiKey)
-                        .onChange(of: apiKey) { newValue in
-                            Prefs.apiKey = newValue.trimmingCharacters(in: .whitespaces)
-                        }
-                }
-
                 Section {
                     AccountPickerBar()
                         .listRowInsets(EdgeInsets())
@@ -104,13 +92,13 @@ struct SettingsView: View {
                     } else if charSkills.isEmpty {
                         Text("Chưa có dữ liệu — cần đăng nhập account này trước").foregroundStyle(.secondary)
                     } else {
-                        SkillPicker(title: "Quái 1", skills: charSkills, selection: $attackSkillId) { skillId in
+                        SkillPicker(title: "Quái 1", skills: charSkills, selection: charConfig.attackSkillId) { skillId in
                             vm.runAction { try await APIClient.setSetting(idx: vm.selectedIdx, name: "SelectedCharSkillId", value: "\(skillId)") }
                         }
                         AoeRow(
                             skills: charSkills,
-                            skillSelection: $aoeSkillId,
-                            countSelection: $aoeCount,
+                            skillSelection: charConfig.aoeSkillId,
+                            countSelection: charConfig.aoeCount,
                             onPickSkill: { skillId in
                                 vm.runAction { try await APIClient.setSetting(idx: vm.selectedIdx, name: "AoeSkillId", value: "\(skillId)") }
                             },
@@ -118,12 +106,12 @@ struct SettingsView: View {
                                 vm.runAction { try await APIClient.setSetting(idx: vm.selectedIdx, name: "AoeThresholdCount", value: "\(count)") }
                             }
                         )
-                        SkillPicker(title: "Quái Thủy", skills: charSkills, selection: $thuySkillId) { skillId in
+                        SkillPicker(title: "Quái Thủy", skills: charSkills, selection: charConfig.thuySkillId) { skillId in
                             vm.runAction { try await APIClient.setElementSkill(idx: vm.selectedIdx, element: Self.thuyElement, skillId: skillId) }
                         }
-                        TextField("Địch hơn X level thì chạy", text: $fleeLevelDiffText)
+                        TextField("Địch hơn X level thì chạy", text: charConfig.fleeLevelDiffText)
                             .keyboardType(.numberPad)
-                            .onChange(of: fleeLevelDiffText) { newValue in
+                            .onChange(of: charConfig.fleeLevelDiffText.wrappedValue) { newValue in
                                 guard let v = Int(newValue) else { return }
                                 vm.runAction { try await APIClient.setSetting(idx: vm.selectedIdx, name: "FleeLevelDiff", value: "\(v)") }
                             }
@@ -138,13 +126,13 @@ struct SettingsView: View {
                     } else if petSkills.isEmpty {
                         Text("Chưa có pet xuất chiến / chưa có dữ liệu skill pet").foregroundStyle(.secondary)
                     } else {
-                        SkillPicker(title: "Quái 1", skills: petSkills, selection: $petSkillId) { skillId in
+                        SkillPicker(title: "Quái 1", skills: petSkills, selection: petConfig.attackSkillId) { skillId in
                             vm.runAction { try await APIClient.setSetting(idx: vm.selectedIdx, name: "SelectedPetSkillId", value: "\(skillId)") }
                         }
                         AoeRow(
                             skills: petSkills,
-                            skillSelection: $petAoeSkillId,
-                            countSelection: $petAoeCount,
+                            skillSelection: petConfig.aoeSkillId,
+                            countSelection: petConfig.aoeCount,
                             onPickSkill: { skillId in
                                 vm.runAction { try await APIClient.setSetting(idx: vm.selectedIdx, name: "PetAoeSkillId", value: "\(skillId)") }
                             },
@@ -152,9 +140,9 @@ struct SettingsView: View {
                                 vm.runAction { try await APIClient.setSetting(idx: vm.selectedIdx, name: "PetAoeThresholdCount", value: "\(count)") }
                             }
                         )
-                        TextField("Địch hơn X level thì chạy", text: $petFleeLevelDiffText)
+                        TextField("Địch hơn X level thì chạy", text: petConfig.fleeLevelDiffText)
                             .keyboardType(.numberPad)
-                            .onChange(of: petFleeLevelDiffText) { newValue in
+                            .onChange(of: petConfig.fleeLevelDiffText.wrappedValue) { newValue in
                                 guard let v = Int(newValue) else { return }
                                 vm.runAction { try await APIClient.setSetting(idx: vm.selectedIdx, name: "PetFleeLevelDiff", value: "\(v)") }
                             }
@@ -168,11 +156,6 @@ struct SettingsView: View {
     }
 
     private func loadAll() async {
-        attackSkillId = nil
-        aoeSkillId = nil
-        thuySkillId = nil
-        petSkillId = nil
-        petAoeSkillId = nil
         charSkillsError = nil
         petSkillsError = nil
         do {
