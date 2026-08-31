@@ -17,6 +17,7 @@ struct BotStatus: Decodable, Identifiable {
     let partyRole: String
     let partied: Bool
     let partyMemberCount: Int
+    let partyAutoPaused: Bool
 }
 
 struct SkillRow: Decodable, Identifiable {
@@ -153,5 +154,10 @@ enum APIClient {
     @discardableResult
     static func setPetElementSkill(idx: Int, element: Int, skillId: Int) async throws -> Data {
         try await request("/setting", method: "POST", query: ["idx": "\(idx)", "name": "PetElementSkillId", "element": "\(element)", "value": "\(skillId)"])
+    }
+
+    @discardableResult
+    static func setPartyAutoPaused(idx: Int, value: Bool) async throws -> Data {
+        try await request("/setting", method: "POST", query: ["idx": "\(idx)", "name": "PartyAutoPaused", "value": value ? "true" : "false"])
     }
 }

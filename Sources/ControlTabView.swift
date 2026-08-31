@@ -190,6 +190,16 @@ struct ControlTabView: View {
                                 .disabled(vm.busy || vm.current?.loggedIn != true)
                             }
                         }
+
+                        if vm.current?.partyAutoPaused == true {
+                            HStack {
+                                Text("⏸️ Đã tạm dừng tự động mời/join")
+                                Spacer()
+                                Button("Kích hoạt lại") {
+                                    vm.runAction { try await APIClient.setPartyAutoPaused(idx: vm.idx, value: false) }
+                                }
+                            }
+                        }
                     } header: {
                         Text("Tổ đội")
                     } footer: {
