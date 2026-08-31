@@ -120,19 +120,18 @@ struct ControlTabView: View {
                         .pickerStyle(.segmented)
 
                         if vm.current?.partyRole == "Member" {
-                            HStack {
-                                Text("Theo leader")
-                                Spacer()
-                                if !otherAccounts.isEmpty {
-                                    Picker("", selection: followLeaderIdxBinding) {
-                                        ForEach(otherAccounts) { o in
-                                            Text(o.username).tag(o.idx)
-                                        }
+                            if !otherAccounts.isEmpty {
+                                Picker("Theo leader", selection: followLeaderIdxBinding) {
+                                    ForEach(otherAccounts) { o in
+                                        Text(o.username).tag(o.idx)
                                     }
-                                    .labelsHidden()
-                                } else {
-                                    Text("Chưa có account khác để theo").foregroundStyle(.secondary)
                                 }
+                            } else {
+                                Text("Chưa có account khác để theo").foregroundStyle(.secondary)
+                            }
+                            HStack {
+                                Text("Nhóm hiện tại")
+                                Spacer()
                                 Button("Rời nhóm", role: .destructive) {
                                     vm.runAction { try await APIClient.leaveParty(idx: vm.idx) }
                                 }
