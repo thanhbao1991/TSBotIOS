@@ -50,6 +50,23 @@ struct ControlTabView: View {
         )
     }
 
+    /// Thành viên thật sự trong nhóm của account đang chọn (Leader) — khác otherAccounts (mọi
+    /// account khác) vì chỉ hiện account có vai trò Member để chọn làm Phó nhóm.
+    private var currentMembers: [BotStatus] {
+        otherAccounts.filter { $0.partyRole == "Member" }
+    }
+
+    private var viceMemberIdxBinding: Binding<Int> {
+        Binding(
+            get: { vm.viceMemberIdxByIdx[vm.selectedIdx] ?? currentMembers.first?.idx ?? 0 },
+            set: { newValue in
+                let idx = vm.selectedIdx
+                vm.viceMemberIdxByIdx[idx] = newValue
+                vm.runAction { try await APIClient.promoteMember(idx: idx, memberIdx: newValue) }
+            }
+        )
+    }
+
     private var forwardLoaBinding: Binding<Bool> {
         Binding(
             get: { vm.forwardLoaByIdx[vm.selectedIdx] ?? false },
@@ -138,6 +155,14 @@ struct ControlTabView: View {
                                 .disabled(vm.busy || vm.current?.loggedIn != true || vm.current?.partied != true)
                             }
                         } else {
+                            if !currentMembers.isEmpty {
+                                Picker("Phó nhóm", selection: viceMemberIdxBinding) {
+                                    ForEach(currentMembers) { m in
+                                        Text(m.username).tag(m.idx)
+                                    }
+                                }
+                                .disabled(vm.busy || vm.current?.loggedIn != true)
+                            }
                             HStack {
                                 Text("Nhóm hiện tại")
                                 Spacer()

@@ -103,4 +103,9 @@ enum APIClient {
     static func leaveParty(idx: Int) async throws -> Data {
         try await request("/leaveparty", method: "POST", query: ["idx": "\(idx)"])
     }
+
+    @discardableResult
+    static func promoteMember(idx: Int, memberIdx: Int) async throws -> Data {
+        try await request("/promotemember", method: "POST", query: ["idx": "\(idx)", "memberidx": "\(memberIdx)"])
+    }
 }

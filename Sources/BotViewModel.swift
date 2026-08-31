@@ -26,6 +26,9 @@ final class BotViewModel: ObservableObject {
     /// Leader đã chọn để "theo" khi account này là Member — chỉ là lựa chọn UI trước khi gửi
     /// FollowLeaderIdx, server không trả lại giá trị này qua /status nên phải tự nhớ.
     @Published var followLeaderIdxByIdx: [Int: Int] = [:]
+    /// Member đang chọn trong Picker "Phó nhóm" trên tab Leader — chỉ là lựa chọn UI trước khi
+    /// gửi promotemember, server không trả lại ai đang là phó qua /status.
+    @Published var viceMemberIdxByIdx: [Int: Int] = [:]
     @Published var selectedIdx: Int = Prefs.idx {
         didSet { Prefs.idx = selectedIdx }
     }
