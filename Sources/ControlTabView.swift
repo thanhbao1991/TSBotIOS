@@ -120,19 +120,22 @@ struct ControlTabView: View {
                         .pickerStyle(.segmented)
 
                         if vm.current?.partyRole == "Member" {
-                            if !otherAccounts.isEmpty {
-                                Picker("Theo leader", selection: followLeaderIdxBinding) {
-                                    ForEach(otherAccounts) { o in
-                                        Text(o.username).tag(o.idx)
+                            HStack {
+                                if !otherAccounts.isEmpty {
+                                    Picker("Theo leader", selection: followLeaderIdxBinding) {
+                                        ForEach(otherAccounts) { o in
+                                            Text(o.username).tag(o.idx)
+                                        }
                                     }
+                                } else {
+                                    Text("Chưa có account khác để theo").foregroundStyle(.secondary)
                                 }
-                            } else {
-                                Text("Chưa có account khác để theo").foregroundStyle(.secondary)
+                                Spacer()
+                                Button("Rời nhóm", role: .destructive) {
+                                    vm.runAction { try await APIClient.leaveParty(idx: vm.idx) }
+                                }
+                                .disabled(vm.busy || vm.current?.loggedIn != true || vm.current?.partied != true)
                             }
-                            Button("Rời nhóm", role: .destructive) {
-                                vm.runAction { try await APIClient.leaveParty(idx: vm.idx) }
-                            }
-                            .disabled(vm.busy || vm.current?.loggedIn != true || vm.current?.partied != true)
                         } else {
                             Button("Giải tán nhóm", role: .destructive) {
                                 vm.runAction { try await APIClient.disbandParty(idx: vm.idx) }
