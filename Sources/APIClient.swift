@@ -16,6 +16,7 @@ struct BotStatus: Decodable, Identifiable {
     let spMax: Int
     let partyRole: String
     let partied: Bool
+    let partyMemberCount: Int
 }
 
 struct APIError: LocalizedError {
@@ -96,5 +97,10 @@ enum APIClient {
     @discardableResult
     static func disbandParty(idx: Int) async throws -> Data {
         try await request("/disbandparty", method: "POST", query: ["idx": "\(idx)"])
+    }
+
+    @discardableResult
+    static func leaveParty(idx: Int) async throws -> Data {
+        try await request("/leaveparty", method: "POST", query: ["idx": "\(idx)"])
     }
 }

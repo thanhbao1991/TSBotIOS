@@ -129,6 +129,10 @@ struct ControlTabView: View {
                             } else {
                                 Text("Chưa có account khác để theo").foregroundStyle(.secondary)
                             }
+                            Button("Rời nhóm", role: .destructive) {
+                                vm.runAction { try await APIClient.leaveParty(idx: vm.idx) }
+                            }
+                            .disabled(vm.busy || vm.current?.loggedIn != true || vm.current?.partied != true)
                         } else {
                             Button("Giải tán nhóm", role: .destructive) {
                                 vm.runAction { try await APIClient.disbandParty(idx: vm.idx) }
@@ -138,10 +142,13 @@ struct ControlTabView: View {
                     } header: {
                         Text("Tổ đội")
                     } footer: {
-                        // partied ở Leader LUÔN false theo thiết kế server/GameBot.IsPartied — chỉ
-                        // có ý nghĩa hiển thị cho Member.
+                        // partied ở Leader LUÔN false theo thiết kế server/GameBot.IsPartied — dùng
+                        // partyMemberCount (đếm phía server qua FollowLeaderIdx+IsPartied của các
+                        // session khác) để biết leader có bao nhiêu người theo thay vì boolean đó.
                         if vm.current?.partyRole == "Member" {
                             Text(vm.current?.partied == true ? "✅ Đã vào nhóm" : "Chưa vào nhóm — tự thử lại mỗi vài giây khi cùng map với leader")
+                        } else if let count = vm.current?.partyMemberCount {
+                            Text(count > 0 ? "👥 Đang có \(count) thành viên trong nhóm" : "Chưa có thành viên nào theo")
                         }
                     }
 
