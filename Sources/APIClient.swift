@@ -27,6 +27,12 @@ struct SkillRow: Decodable, Identifiable {
     let Id: Int
 }
 
+struct PetInfo: Decodable, Identifiable {
+    var id: Int { Id }
+    let Id: Int
+    let Name: String
+}
+
 struct APIError: LocalizedError {
     let message: String
     var errorDescription: String? { message }
@@ -68,6 +74,16 @@ enum APIClient {
     static func fetchSkills(idx: Int, target: String = "char") async throws -> [SkillRow] {
         let data = try await request("/skills", method: "GET", query: ["idx": "\(idx)", "target": target])
         return try JSONDecoder().decode([SkillRow].self, from: data)
+    }
+
+    static func fetchPets(idx: Int) async throws -> [PetInfo] {
+        let data = try await request("/pets", method: "GET", query: ["idx": "\(idx)"])
+        return try JSONDecoder().decode([PetInfo].self, from: data)
+    }
+
+    @discardableResult
+    static func summonPet(idx: Int, petId: Int) async throws -> Data {
+        try await request("/summonpet", method: "POST", query: ["idx": "\(idx)", "petid": "\(petId)"])
     }
 
     static func fetchLog(idx: Int, lines: Int = 150) async throws -> String {
@@ -125,5 +141,10 @@ enum APIClient {
     @discardableResult
     static func setElementSkill(idx: Int, element: Int, skillId: Int) async throws -> Data {
         try await request("/setting", method: "POST", query: ["idx": "\(idx)", "name": "ElementSkillId", "element": "\(element)", "value": "\(skillId)"])
+    }
+
+    @discardableResult
+    static func setPetElementSkill(idx: Int, element: Int, skillId: Int) async throws -> Data {
+        try await request("/setting", method: "POST", query: ["idx": "\(idx)", "name": "PetElementSkillId", "element": "\(element)", "value": "\(skillId)"])
     }
 }
