@@ -25,6 +25,31 @@ struct ControlTabView: View {
         )
     }
 
+    private var partyRoleBinding: Binding<String> {
+        Binding(
+            get: { vm.current?.partyRole ?? "Leader" },
+            set: { newValue in
+                let idx = vm.selectedIdx
+                vm.runAction { try await APIClient.setSetting(idx: idx, name: "PartyRole", value: newValue) }
+            }
+        )
+    }
+
+    private var otherAccounts: [BotStatus] {
+        vm.statuses.filter { $0.idx != vm.selectedIdx }
+    }
+
+    private var followLeaderIdxBinding: Binding<Int> {
+        Binding(
+            get: { vm.followLeaderIdxByIdx[vm.selectedIdx] ?? otherAccounts.first?.idx ?? 0 },
+            set: { newValue in
+                let idx = vm.selectedIdx
+                vm.followLeaderIdxByIdx[idx] = newValue
+                vm.runAction { try await APIClient.setSetting(idx: idx, name: "FollowLeaderIdx", value: "\(newValue)") }
+            }
+        )
+    }
+
     private var forwardLoaBinding: Binding<Bool> {
         Binding(
             get: { vm.forwardLoaByIdx[vm.selectedIdx] ?? false },
@@ -84,6 +109,39 @@ struct ControlTabView: View {
                             }
                         } else {
                             Text("Chưa đăng nhập")
+                        }
+                    }
+
+                    Section {
+                        Picker("Vai trò", selection: partyRoleBinding) {
+                            Text("Leader").tag("Leader")
+                            Text("Member").tag("Member")
+                        }
+                        .pickerStyle(.segmented)
+
+                        if vm.current?.partyRole == "Member" {
+                            if !otherAccounts.isEmpty {
+                                Picker("Theo leader", selection: followLeaderIdxBinding) {
+                                    ForEach(otherAccounts) { o in
+                                        Text(o.username).tag(o.idx)
+                                    }
+                                }
+                            } else {
+                                Text("Chưa có account khác để theo").foregroundStyle(.secondary)
+                            }
+                        } else {
+                            Button("Giải tán nhóm", role: .destructive) {
+                                vm.runAction { try await APIClient.disbandParty(idx: vm.idx) }
+                            }
+                            .disabled(vm.busy || vm.current?.loggedIn != true)
+                        }
+                    } header: {
+                        Text("Tổ đội")
+                    } footer: {
+                        // partied ở Leader LUÔN false theo thiết kế server/GameBot.IsPartied — chỉ
+                        // có ý nghĩa hiển thị cho Member.
+                        if vm.current?.partyRole == "Member" {
+                            Text(vm.current?.partied == true ? "✅ Đã vào nhóm" : "Chưa vào nhóm — tự thử lại mỗi vài giây khi cùng map với leader")
                         }
                     }
 

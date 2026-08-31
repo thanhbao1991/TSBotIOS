@@ -15,6 +15,7 @@ struct BotStatus: Decodable, Identifiable {
     let sp: Int
     let spMax: Int
     let partyRole: String
+    let partied: Bool
 }
 
 struct APIError: LocalizedError {
@@ -90,5 +91,10 @@ enum APIClient {
     @discardableResult
     static func setForwardLoa(idx: Int, value: Bool) async throws -> Data {
         try await request("/forwardloa", method: "POST", query: ["idx": "\(idx)", "value": value ? "true" : "false"])
+    }
+
+    @discardableResult
+    static func disbandParty(idx: Int) async throws -> Data {
+        try await request("/disbandparty", method: "POST", query: ["idx": "\(idx)"])
     }
 }

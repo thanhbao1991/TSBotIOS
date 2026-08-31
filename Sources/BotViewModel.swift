@@ -23,6 +23,9 @@ final class BotViewModel: ObservableObject {
     /// thấy mapId đã đổi đúng hướng.
     @Published var leavingOtherworldByIdx: Set<Int> = []
     @Published var enteringOtherworldByIdx: Set<Int> = []
+    /// Leader đã chọn để "theo" khi account này là Member — chỉ là lựa chọn UI trước khi gửi
+    /// FollowLeaderIdx, server không trả lại giá trị này qua /status nên phải tự nhớ.
+    @Published var followLeaderIdxByIdx: [Int: Int] = [:]
     @Published var selectedIdx: Int = Prefs.idx {
         didSet { Prefs.idx = selectedIdx }
     }
