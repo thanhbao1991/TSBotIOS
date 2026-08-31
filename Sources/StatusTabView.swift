@@ -4,7 +4,18 @@ struct StatusTabView: View {
     @EnvironmentObject private var vm: BotViewModel
     @State private var pets: [PetInfo] = []
     @State private var petsError: String?
-    @State private var selectedPetId: Int?
+
+    private var selectedPetIdBinding: Binding<Int?> {
+        Binding(
+            get: { vm.selectedPetIdByIdx[vm.selectedIdx] ?? nil },
+            set: { newValue in
+                vm.selectedPetIdByIdx[vm.selectedIdx] = newValue
+                guard let petId = newValue else { return }
+                let idx = vm.selectedIdx
+                vm.runAction { try await APIClient.summonPet(idx: idx, petId: petId) }
+            }
+        )
+    }
 
     var body: some View {
         NavigationStack {
@@ -38,15 +49,11 @@ struct StatusTabView: View {
                         } else if pets.isEmpty {
                             Text("Chưa có pet nào (cần đăng nhập trước)").foregroundStyle(.secondary)
                         } else {
-                            Picker("Pet xuất chiến", selection: $selectedPetId) {
+                            Picker("Pet xuất chiến", selection: selectedPetIdBinding) {
                                 Text("—").tag(nil as Int?)
                                 ForEach(pets) { p in
                                     Text(p.Name).tag(p.Id as Int?)
                                 }
-                            }
-                            .onChange(of: selectedPetId) { newValue in
-                                guard let petId = newValue else { return }
-                                vm.runAction { try await APIClient.summonPet(idx: vm.selectedIdx, petId: petId) }
                             }
                         }
                     } header: {
@@ -61,7 +68,6 @@ struct StatusTabView: View {
     }
 
     private func loadPets() async {
-        selectedPetId = nil
         petsError = nil
         do {
             pets = try await APIClient.fetchPets(idx: vm.selectedIdx)

@@ -19,7 +19,7 @@ private struct SkillPicker: View {
     }
 }
 
-/// Dòng "Skill đánh X quái" — Picker skill + Picker số quái (2-10) CHUNG 1 HÀNG, không tách dòng.
+/// Dòng "Quái N" — Picker số quái (2-10) + Picker skill CHUNG 1 HÀNG, không tách dòng.
 private struct AoeRow: View {
     let skills: [SkillRow]
     @Binding var skillSelection: Int?
@@ -29,7 +29,16 @@ private struct AoeRow: View {
 
     var body: some View {
         HStack {
-            Picker("Skill đánh X quái", selection: $skillSelection) {
+            Picker("Quái N", selection: $countSelection) {
+                ForEach(2...10, id: \.self) { n in
+                    Text("\(n)").tag(n)
+                }
+            }
+            .onChange(of: countSelection) { newValue in
+                onPickCount(newValue)
+            }
+            Spacer()
+            Picker("Skill", selection: $skillSelection) {
                 Text("—").tag(nil as Int?)
                 ForEach(skills) { sk in
                     Text(sk.Name).tag(sk.Id as Int?)
@@ -37,15 +46,6 @@ private struct AoeRow: View {
             }
             .onChange(of: skillSelection) { newValue in
                 if let v = newValue { onPickSkill(v) }
-            }
-            Spacer()
-            Picker("X", selection: $countSelection) {
-                ForEach(2...10, id: \.self) { n in
-                    Text("\(n)").tag(n)
-                }
-            }
-            .onChange(of: countSelection) { newValue in
-                onPickCount(newValue)
             }
         }
     }
@@ -73,7 +73,7 @@ struct SettingsView: View {
     @State private var petSkillId: Int?
     @State private var petAoeSkillId: Int?
     @State private var petAoeCount = 5
-    @State private var petThuySkillId: Int?
+    @State private var petFleeLevelDiffText = ""
 
     var body: some View {
         NavigationStack {
@@ -104,7 +104,7 @@ struct SettingsView: View {
                     } else if charSkills.isEmpty {
                         Text("Chưa có dữ liệu — cần đăng nhập account này trước").foregroundStyle(.secondary)
                     } else {
-                        SkillPicker(title: "Skill đánh lẻ", skills: charSkills, selection: $attackSkillId) { skillId in
+                        SkillPicker(title: "Quái 1", skills: charSkills, selection: $attackSkillId) { skillId in
                             vm.runAction { try await APIClient.setSetting(idx: vm.selectedIdx, name: "SelectedCharSkillId", value: "\(skillId)") }
                         }
                         AoeRow(
@@ -118,7 +118,7 @@ struct SettingsView: View {
                                 vm.runAction { try await APIClient.setSetting(idx: vm.selectedIdx, name: "AoeThresholdCount", value: "\(count)") }
                             }
                         )
-                        SkillPicker(title: "Skill đánh quái hệ Thủy", skills: charSkills, selection: $thuySkillId) { skillId in
+                        SkillPicker(title: "Quái Thủy", skills: charSkills, selection: $thuySkillId) { skillId in
                             vm.runAction { try await APIClient.setElementSkill(idx: vm.selectedIdx, element: Self.thuyElement, skillId: skillId) }
                         }
                         TextField("Địch hơn X level thì chạy", text: $fleeLevelDiffText)
@@ -130,8 +130,6 @@ struct SettingsView: View {
                     }
                 } header: {
                     Text("Char")
-                } footer: {
-                    Text("Mỗi lượt đánh dùng 1 skill duy nhất: Skill đánh lẻ là mặc định, tự đổi sang \"Skill đánh X quái\" khi đủ X quái quanh, và Skill hệ Thủy LUÔN thắng cả 2 cái trên nếu quái đúng hệ Thủy. Riêng \"Địch hơn X level thì chạy\" được kiểm tra TRƯỚC TIÊN — quái quá mạnh thì bỏ chạy luôn, không đánh nữa.")
                 }
 
                 Section {
@@ -140,7 +138,7 @@ struct SettingsView: View {
                     } else if petSkills.isEmpty {
                         Text("Chưa có pet xuất chiến / chưa có dữ liệu skill pet").foregroundStyle(.secondary)
                     } else {
-                        SkillPicker(title: "Skill đánh lẻ", skills: petSkills, selection: $petSkillId) { skillId in
+                        SkillPicker(title: "Quái 1", skills: petSkills, selection: $petSkillId) { skillId in
                             vm.runAction { try await APIClient.setSetting(idx: vm.selectedIdx, name: "SelectedPetSkillId", value: "\(skillId)") }
                         }
                         AoeRow(
@@ -154,14 +152,15 @@ struct SettingsView: View {
                                 vm.runAction { try await APIClient.setSetting(idx: vm.selectedIdx, name: "PetAoeThresholdCount", value: "\(count)") }
                             }
                         )
-                        SkillPicker(title: "Skill đánh quái hệ Thủy", skills: petSkills, selection: $petThuySkillId) { skillId in
-                            vm.runAction { try await APIClient.setPetElementSkill(idx: vm.selectedIdx, element: Self.thuyElement, skillId: skillId) }
-                        }
+                        TextField("Địch hơn X level thì chạy", text: $petFleeLevelDiffText)
+                            .keyboardType(.numberPad)
+                            .onChange(of: petFleeLevelDiffText) { newValue in
+                                guard let v = Int(newValue) else { return }
+                                vm.runAction { try await APIClient.setSetting(idx: vm.selectedIdx, name: "PetFleeLevelDiff", value: "\(v)") }
+                            }
                     }
                 } header: {
                     Text("Pet xuất chiến")
-                } footer: {
-                    Text("Giống 3 dòng đầu của Char, tính riêng cho pet đang xuất chiến — đổi pet khác (chọn ở tab Trạng thái) thì phải chọn lại vì pet mới có bộ skill riêng.")
                 }
             }
             .task(id: vm.selectedIdx) { await loadAll() }
@@ -174,7 +173,6 @@ struct SettingsView: View {
         thuySkillId = nil
         petSkillId = nil
         petAoeSkillId = nil
-        petThuySkillId = nil
         charSkillsError = nil
         petSkillsError = nil
         do {
