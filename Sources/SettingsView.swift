@@ -90,6 +90,8 @@ struct SettingsView: View {
                     }
                 } header: {
                     Text("Skill nhân vật")
+                } footer: {
+                    Text("Skill đánh: dùng khi đánh 1 mục tiêu thường.\nSkill AOE: tự đổi sang skill này khi số quái quanh đủ ngưỡng (đặt ở mục Chiến đấu bên dưới).\nSkill hệ: tự dùng thay Skill đánh khi gặp quái ĐÚNG hệ tương ứng (khắc chế hệ, sát thương cao hơn).")
                 }
 
                 Section {
@@ -127,7 +129,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Skill pet")
                 } footer: {
-                    Text("Áp dụng cho pet ĐANG xuất chiến — đổi pet khác thì cấu hình lại.")
+                    Text("Giống Skill đánh/Skill AOE của nhân vật nhưng dùng cho pet. Áp dụng cho pet ĐANG xuất chiến — đổi pet khác (triệu hồi pet khác) thì phải chọn lại vì pet mới có bộ skill riêng.")
                 }
             }
             .task(id: vm.selectedIdx) { await loadAll() }
