@@ -78,14 +78,9 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section {
-                    AccountPickerBar()
-                        .listRowInsets(EdgeInsets())
-                } header: {
-                    Text("Account đang chỉnh")
-                }
-
+            VStack(spacing: 0) {
+                AccountPickerBar()
+                List {
                 Section {
                     if let err = charSkillsError {
                         Text(err).foregroundStyle(.red).font(.footnote)
@@ -149,6 +144,7 @@ struct SettingsView: View {
                     }
                 } header: {
                     Text("Pet xuất chiến")
+                }
                 }
             }
             .task(id: vm.selectedIdx) { await loadAll() }
