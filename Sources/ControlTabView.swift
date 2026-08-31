@@ -135,6 +135,7 @@ struct ControlTabView: View {
                             Text("Member").tag("Member")
                         }
                         .pickerStyle(.segmented)
+                        .listRowSeparator(.hidden)
 
                         if vm.current?.partyRole == "Member" {
                             if !otherAccounts.isEmpty {
@@ -143,8 +144,10 @@ struct ControlTabView: View {
                                         Text(o.username).tag(o.idx)
                                     }
                                 }
+                                .listRowSeparator(.hidden)
                             } else {
                                 Text("Chưa có account khác để theo").foregroundStyle(.secondary)
+                                    .listRowSeparator(.hidden)
                             }
                             HStack {
                                 Text("Nhóm hiện tại")
@@ -162,6 +165,7 @@ struct ControlTabView: View {
                                     }
                                 }
                                 .disabled(vm.busy || vm.current?.loggedIn != true)
+                                .listRowSeparator(.hidden)
                             }
                             HStack {
                                 Text("Nhóm hiện tại")
