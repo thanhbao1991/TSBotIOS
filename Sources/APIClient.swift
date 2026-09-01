@@ -34,6 +34,24 @@ struct PetInfo: Decodable, Identifiable {
     let Name: String
 }
 
+/// Cấu hình combat hiện đang lưu trên server cho 1 account — dùng để prefill UI khi mở app/đổi
+/// account, tránh Picker hiện "—" dù server thật ra đã nhớ giá trị (xem GET /charconfig).
+/// -1 = sentinel "chưa từng set" (chỉ áp dụng cho thuySkillId/lastActivePetId — 2 field DUY NHẤT
+/// có default thật là -1 trong AccountSettings); các skillId khác default 10000 ("Đấu Vật") LÀ
+/// giá trị thật server sẽ dùng nên hiện luôn, không coi là "chưa chọn".
+struct CharConfigInfo: Decodable {
+    let selectedCharSkillId: Int
+    let aoeSkillId: Int
+    let aoeThresholdCount: Int
+    let thuySkillId: Int
+    let fleeLevelDiff: Int
+    let selectedPetSkillId: Int
+    let petAoeSkillId: Int
+    let petAoeThresholdCount: Int
+    let petFleeLevelDiff: Int
+    let lastActivePetId: Int
+}
+
 struct APIError: LocalizedError {
     let message: String
     var errorDescription: String? { message }
@@ -70,6 +88,11 @@ enum APIClient {
     static func fetchStatus() async throws -> [BotStatus] {
         let data = try await request("/status", method: "GET")
         return try JSONDecoder().decode([BotStatus].self, from: data)
+    }
+
+    static func fetchCharConfig(idx: Int) async throws -> CharConfigInfo {
+        let data = try await request("/charconfig", method: "GET", query: ["idx": "\(idx)"])
+        return try JSONDecoder().decode(CharConfigInfo.self, from: data)
     }
 
     static func fetchSkills(idx: Int, target: String = "char") async throws -> [SkillRow] {

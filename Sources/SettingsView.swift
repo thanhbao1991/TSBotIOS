@@ -166,5 +166,29 @@ struct SettingsView: View {
             petSkills = []
             petSkillsError = error.localizedDescription
         }
+        // Prefill từ giá trị server ĐANG THẬT SỰ lưu — chỉ prefill nếu app CHƯA có lựa chọn nào
+        // cho account này (tránh ghi đè lựa chọn user vừa bấm trong phiên hiện tại bằng dữ liệu
+        // cũ hơn nếu load lại xảy ra sau khi user đã đổi tay).
+        if vm.charSkillConfigByIdx[vm.selectedIdx] == nil || vm.petSkillConfigByIdx[vm.selectedIdx] == nil {
+            if let cfg = try? await APIClient.fetchCharConfig(idx: vm.selectedIdx) {
+                if vm.charSkillConfigByIdx[vm.selectedIdx] == nil {
+                    vm.charSkillConfigByIdx[vm.selectedIdx] = CharSkillConfig(
+                        attackSkillId: cfg.selectedCharSkillId,
+                        aoeSkillId: cfg.aoeSkillId,
+                        aoeCount: cfg.aoeThresholdCount,
+                        thuySkillId: cfg.thuySkillId >= 0 ? cfg.thuySkillId : nil,
+                        fleeLevelDiffText: "\(cfg.fleeLevelDiff)"
+                    )
+                }
+                if vm.petSkillConfigByIdx[vm.selectedIdx] == nil {
+                    vm.petSkillConfigByIdx[vm.selectedIdx] = PetSkillConfig(
+                        attackSkillId: cfg.selectedPetSkillId,
+                        aoeSkillId: cfg.petAoeSkillId,
+                        aoeCount: cfg.petAoeThresholdCount,
+                        fleeLevelDiffText: "\(cfg.petFleeLevelDiff)"
+                    )
+                }
+            }
+        }
     }
 }

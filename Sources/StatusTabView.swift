@@ -75,5 +75,12 @@ struct StatusTabView: View {
             pets = []
             petsError = error.localizedDescription
         }
+        // Prefill pet đang chọn từ giá trị server thật sự lưu (LastActivePetId) — chỉ khi app
+        // CHƯA có lựa chọn nào cho account này, tránh ghi đè lựa chọn user vừa bấm.
+        if vm.selectedPetIdByIdx[vm.selectedIdx] == nil,
+           let cfg = try? await APIClient.fetchCharConfig(idx: vm.selectedIdx),
+           cfg.lastActivePetId > 0 {
+            vm.selectedPetIdByIdx[vm.selectedIdx] = cfg.lastActivePetId
+        }
     }
 }
