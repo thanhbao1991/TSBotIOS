@@ -4,6 +4,7 @@ struct StatusTabView: View {
     @EnvironmentObject private var vm: BotViewModel
     @State private var pets: [PetInfo] = []
     @State private var petsError: String?
+    @State private var prefillError: String?
 
     private var selectedPetIdBinding: Binding<Int?> {
         Binding(
@@ -55,6 +56,9 @@ struct StatusTabView: View {
                                     Text(p.Name).tag(p.Id as Int?)
                                 }
                             }
+                            if let err = prefillError {
+                                Text(err).foregroundStyle(.red).font(.footnote)
+                            }
                         }
                     } header: {
                         Text("Pet")
@@ -63,24 +67,33 @@ struct StatusTabView: View {
                 .refreshable { await vm.refresh() }
             }
             .overlay { if vm.busy { ProgressView().controlSize(.large) } }
-            .task(id: vm.selectedIdx) { await loadPets() }
+            // id gồm cả loggedIn — /pets và /charconfig đòi hỏi đã login (409 nếu chưa), mà
+            // refresh() poll nền không đổi selectedIdx nên riêng .task(id: selectedIdx) không tự
+            // refire khi login xong SAU khi tab đã mở sẵn; ghép thêm loggedIn để tự tải lại đúng
+            // lúc chuyển false→true thay vì kẹt lỗi cũ vĩnh viễn.
+            .task(id: "\(vm.selectedIdx)-\(vm.current?.loggedIn ?? false)") { await loadPets() }
         }
     }
 
     private func loadPets() async {
         petsError = nil
+        prefillError = nil
         do {
             pets = try await APIClient.fetchPets(idx: vm.selectedIdx)
         } catch {
             pets = []
             petsError = error.localizedDescription
+            return
         }
         // Prefill pet đang chọn từ giá trị server thật sự lưu (LastActivePetId) — chỉ khi app
         // CHƯA có lựa chọn nào cho account này, tránh ghi đè lựa chọn user vừa bấm.
-        if vm.selectedPetIdByIdx[vm.selectedIdx] == nil,
-           let cfg = try? await APIClient.fetchCharConfig(idx: vm.selectedIdx),
-           cfg.lastActivePetId > 0 {
-            vm.selectedPetIdByIdx[vm.selectedIdx] = cfg.lastActivePetId
+        if vm.selectedPetIdByIdx[vm.selectedIdx] == nil {
+            do {
+                let cfg = try await APIClient.fetchCharConfig(idx: vm.selectedIdx)
+                if cfg.lastActivePetId > 0 { vm.selectedPetIdByIdx[vm.selectedIdx] = cfg.lastActivePetId }
+            } catch {
+                prefillError = "Không tải được pet đã chọn trước đó: \(error.localizedDescription)"
+            }
         }
     }
 }

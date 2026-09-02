@@ -58,6 +58,7 @@ struct SettingsView: View {
     @State private var petSkills: [SkillRow] = []
     @State private var charSkillsError: String?
     @State private var petSkillsError: String?
+    @State private var prefillError: String?
 
     /// Hệ Thủy cố định = 2 (xem GameBot: 1 Địa 2 Thủy 3 Hỏa 4 Phong) — user chỉ cần đúng hệ này.
     private static let thuyElement = 2
@@ -110,6 +111,9 @@ struct SettingsView: View {
                                 guard let v = Int(newValue) else { return }
                                 vm.runAction { try await APIClient.setSetting(idx: vm.selectedIdx, name: "FleeLevelDiff", value: "\(v)") }
                             }
+                        if let err = prefillError {
+                            Text(err).foregroundStyle(.red).font(.footnote)
+                        }
                     }
                 } header: {
                     Text("Char")
@@ -147,13 +151,18 @@ struct SettingsView: View {
                 }
                 }
             }
-            .task(id: vm.selectedIdx) { await loadAll() }
+            // id gồm cả loggedIn — /skills và /charconfig đòi hỏi đã login (409 nếu chưa), mà
+            // refresh() poll nền không đổi selectedIdx nên riêng .task(id: selectedIdx) không tự
+            // refire khi login xong SAU khi tab đã mở sẵn; ghép thêm loggedIn để tự tải lại đúng
+            // lúc chuyển false→true thay vì kẹt lỗi cũ vĩnh viễn.
+            .task(id: "\(vm.selectedIdx)-\(vm.current?.loggedIn ?? false)") { await loadAll() }
         }
     }
 
     private func loadAll() async {
         charSkillsError = nil
         petSkillsError = nil
+        prefillError = nil
         do {
             charSkills = try await APIClient.fetchSkills(idx: vm.selectedIdx, target: "char")
         } catch {
@@ -170,7 +179,8 @@ struct SettingsView: View {
         // cho account này (tránh ghi đè lựa chọn user vừa bấm trong phiên hiện tại bằng dữ liệu
         // cũ hơn nếu load lại xảy ra sau khi user đã đổi tay).
         if vm.charSkillConfigByIdx[vm.selectedIdx] == nil || vm.petSkillConfigByIdx[vm.selectedIdx] == nil {
-            if let cfg = try? await APIClient.fetchCharConfig(idx: vm.selectedIdx) {
+            do {
+                let cfg = try await APIClient.fetchCharConfig(idx: vm.selectedIdx)
                 if vm.charSkillConfigByIdx[vm.selectedIdx] == nil {
                     vm.charSkillConfigByIdx[vm.selectedIdx] = CharSkillConfig(
                         attackSkillId: cfg.selectedCharSkillId,
@@ -188,6 +198,8 @@ struct SettingsView: View {
                         fleeLevelDiffText: "\(cfg.petFleeLevelDiff)"
                     )
                 }
+            } catch {
+                prefillError = "Không tải được lựa chọn skill đã lưu: \(error.localizedDescription)"
             }
         }
     }
